@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karaoke Bingo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Figtree:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a loud, friendly bar-night game; short words, big type.
+   IDEA: a paper bingo card stamped with a lipstick-red dauber under stage lights.
+   PICTURE: the player's own card, large, at the top; tap a square to dab it.
+   COLOUR and TYPE: lipstick red marquee band, teal support, sunflower accent; Bungee marquee + Figtree.
+   LAYOUT: marquee band, then the card in one calm column, actions beneath. */
+:root{color-scheme:light dark;
+--bg:light-dark(#fff4ea,#170b10);--ink:light-dark(#24101a,#fbeee6);--mute:light-dark(#7a5a66,#c3a6b0);
+--surf:light-dark(#ffffff,#24141b);--line:light-dark(#efd9cc,#3a2430);
+--red:#e0234e;--redd:light-dark(#b8143a,#ff5577);--teal:light-dark(#0c7c7e,#3cc6c3);--sun:#ffc83d;--dab:rgba(224,35,78,.62)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Figtree,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,3.5vw,44px) max(5vw,16px)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.top{background:var(--red);color:#fff;position:relative;overflow:hidden}
+.top::before{content:"";position:absolute;inset:-40% -10% auto auto;width:60vw;height:60vw;max-width:520px;max-height:520px;background:radial-gradient(circle,rgba(255,200,61,.35),transparent 65%);pointer-events:none}
+.wrap{max-width:820px;margin:0 auto;position:relative}
+h1{font:400 clamp(32px,7vw,52px)/1.05 Bungee,Figtree,sans-serif;margin:0 0 6px;text-wrap:balance;overflow-wrap:anywhere}
+.sub{margin:0 0 18px;opacity:.92}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:800;padding:12px 18px;min-height:44px;border-radius:14px 14px 0 0}
+.tabs button[aria-selected=true]{background:var(--bg);color:var(--ink)}
+.status{font-size:14px;color:var(--mute);margin:0 0 14px}
+.panel{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:clamp(14px,3vw,24px);margin-bottom:18px}
+h2{font:400 22px/1.15 Bungee,Figtree,sans-serif;margin:0 0 12px}
+.card{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:6px;max-width:560px;margin:0 auto}
+.heads{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:6px;max-width:560px;margin:0 auto 6px;text-align:center;font:400 clamp(22px,6vw,34px)/1 Bungee,sans-serif;color:var(--red)}
+.cell{position:relative;aspect-ratio:1;border:2px solid var(--line);border-radius:10px;background:var(--surf);display:grid;place-items:center;padding:4px;text-align:center;font-weight:600;line-height:1.15;font-size:var(--fs);overflow:hidden;hyphens:auto;overflow-wrap:anywhere}
+.cell span{position:relative;z-index:1;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.cell.on::before{content:"";position:absolute;inset:9%;border-radius:50%;background:radial-gradient(circle at 40% 38%,var(--dab),rgba(184,20,58,.7));z-index:0;animation:dab .25s ease-out}
+.cell.on{color:#fff;border-color:var(--red)}
+.card.mine .cell{cursor:pointer}
+.card.mine .cell:active{transform:scale(.96)}
+.cell.free{background:var(--sun);color:#24101a;font:400 clamp(12px,3vw,18px) Bungee,sans-serif;border-color:var(--sun)}
+.cell.free.on{color:#fff}
+.cell.win{box-shadow:0 0 0 3px var(--sun)}
+@keyframes dab{from{transform:scale(1.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){.cell.on::before{animation:none}}
+.peek{min-height:1.6em;text-align:center;margin:12px 0 0;color:var(--mute);font-size:15px}
+.meter{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:14px;font-weight:800}
+.meter b{font:400 26px/1 Bungee,sans-serif;color:var(--red);margin-right:6px}
+.bingo{background:var(--sun);color:#24101a;border-radius:14px;padding:12px 16px;text-align:center;font:400 clamp(22px,5vw,30px)/1.1 Bungee,sans-serif;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=search],select,textarea{background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px;min-height:44px;width:100%}
+textarea{min-height:220px;resize:vertical;line-height:1.45}
+label{font-weight:700;display:block;margin:12px 0 6px}
+.btn{border:0;border-radius:12px;padding:10px 18px;min-height:44px;font-weight:800;background:var(--red);color:#fff;white-space:nowrap}
+.btn.alt{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn.teal{background:var(--teal);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.grow{flex:1 1 200px}
+.note{font-size:14px;color:var(--mute);margin:8px 0 0}
+.err{color:var(--redd);font-weight:700}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--sun);color:#24101a;font:400 clamp(18px,4vw,24px)/1.2 Bungee,sans-serif;padding:14px 22px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:30;max-width:92vw;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(10,4,8,.7);display:grid;place-items:center;padding:16px;z-index:20}
+.modal .panel{width:min(600px,100%);max-height:94vh;overflow:auto;margin:0}
+[hidden]{display:none!important}
+</style>
+
+</head>
+<body>
+<header class="band top">
+  <div class="wrap">
+    <h1 id="title">Karaoke Bingo</h1>
+    <p class="sub" id="sub">Your own random card. Tap a square when someone sings one.</p>
+  </div>
+</header>
+<main class="band"><div class="wrap">
+  <div id="area"></div>
+  <p class="note" id="warn" hidden>This browser won't save your card (private mode?). Keep this page open, or your card will be gone if it reloads.</p>
+</div></main>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+/* ==========================================================
+   EDIT YOUR GAME HERE
+   - One category per line, inside the quotes, followed by a comma.
+   - 24 or more categories: 5 x 5 cards with a free centre.
+     16 to 23: 4 x 4 cards. 9 to 15: 3 x 3 cards.
+   ========================================================== */
+const GAME_TITLE = "Karaoke Bingo";
+const CATEGORIES = [
+  "Female lead",
+  "Male lead",
+  "Duet",
+  "Rap",
+  "Country",
+  "Classic rock",
+  "Oldies (70's or older)",
+  "80's",
+  "90's",
+  "00's",
+  "UK bands",
+  "Pop hit",
+  "One hit wonder",
+  "Love songs",
+  "Movie soundtrack",
+  "Musicals or Disney",
+  "Christmas tune",
+  "Club hit / dance tune",
+  "Gay anthem",
+  "Non-English",
+  "Dirty lyrics",
+  "New to me song",
+  "Sing a dare",
+  "Backup singer",
+  "Backup dancer",
+  "Shatner style",
+  "Moves like Jagger (a performance with your song)",
+];
+/* ========================================================== */
+
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const FREE='__free__';
+const seen=new Set();
+const items=CATEGORIES.map(s=>String(s).trim()).filter(s=>s&&!seen.has(s.toLowerCase())&&seen.add(s.toLowerCase()));
+const size=items.length>=24?{n:5,free:true,need:24}:items.length>=16?{n:4,free:false,need:16}:{n:3,free:false,need:9};
+const listKey=items.join('|')+'#'+size.n;
+const KEY='karaoke-bingo-card';
+let state=null,peek='',confirmNew=false,canSave=true;
+
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.list===listKey&&Array.isArray(s.card))return s}catch(e){canSave=false}return null}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){canSave=false;$('#warn').hidden=false}}
+const rnd=n=>crypto.getRandomValues(new Uint32Array(1))[0]%n;
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+function deal(name){
+  const pick=shuffle(items).slice(0,size.need);let card=pick;
+  if(size.free){const m=Math.floor(size.n*size.n/2);card=[...pick.slice(0,m),FREE,...pick.slice(m)]}
+  const code=[...Array(4)].map(()=> 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[rnd(31)]).join('');
+  return{list:listKey,name,card,marks:card.map(c=>c===FREE),code,bingo:false};
+}
+function lines(n){const L=[];for(let r=0;r<n;r++){L.push([...Array(n)].map((_,c)=>r*n+c));L.push([...Array(n)].map((_,c)=>c*n+r))}
+  L.push([...Array(n)].map((_,i)=>i*n+i));L.push([...Array(n)].map((_,i)=>i*n+(n-1-i)));return L}
+function prog(){
+  const on=state.marks;let best=size.n;const win=new Set();let count=0;
+  for(const L of lines(size.n)){const miss=L.filter(i=>!on[i]).length;if(miss<best)best=miss;if(!miss){count++;L.forEach(i=>win.add(i))}}
+  return{best,win,count,marks:on.filter(Boolean).length};
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,5000)}
+
+function render(){
+  const a=$('#area');
+  if(items.length<9){a.innerHTML='<div class="panel"><h2>Need more categories</h2><p>Add at least 9 categories to the list in index.html.</p></div>';return}
+  if(!state){
+    a.innerHTML=`<div class="panel"><h2>Grab a card</h2><p>Your card is shuffled at random from ${items.length} categories, so everyone's is different. It stays saved on this phone.</p>
+    <form class="row" id="join"><input type="text" id="name" class="grow" maxlength="30" placeholder="Your name" aria-label="Your name" autocomplete="nickname"><button class="btn" type="submit">Deal me in</button></form></div>`;
+    return;
+  }
+  const p=prog();const n=size.n;
+  const fs=n===5?'clamp(10px,2.5vw,14px)':n===4?'clamp(12px,3.2vw,16px)':'clamp(14px,4.2vw,19px)';
+  const heads=n===5?`<div class="heads" style="--n:5">${'BINGO'.split('').map(l=>`<span>${l}</span>`).join('')}</div>`:'';
+  const cells=state.card.map((c,i)=>{const free=c===FREE,label=free?'FREE':c;
+    return `<button type="button" class="cell${state.marks[i]?' on':''}${free?' free':''}${p.win.has(i)?' win':''}" data-i="${i}" aria-pressed="${state.marks[i]}" aria-label="${esc(label)}"><span>${esc(label)}</span></button>`}).join('');
+  a.innerHTML=`<div class="panel">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2 style="margin:0">${esc(state.name)}'s card</h2><span class="note" style="margin:0">Card ${esc(state.code)}</span></div>
+    ${p.count?`<div class="bingo">Bingo!${p.count>1?` × ${p.count}`:''} Shout it out!</div>`:''}
+    ${heads}<div class="card mine" style="--n:${n};--fs:${fs}">${cells}</div>
+    <p class="peek" id="peek">${esc(peek)||'Tap a square to dab it. Tap again to undo.'}</p>
+    <div class="meter"><span><b>${p.marks}</b>dabbed</span><span><b>${p.count?0:p.best}</b>to go</span></div>
+  </div>
+  <div class="row" style="justify-content:center">
+    <button class="btn alt" id="clear" type="button">Clear my dabs</button>
+    <button class="btn alt" id="fresh" type="button">${confirmNew?'Tap again: new card':'Deal a new card'}</button>
+  </div>`;
+}
+
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='join')return;e.preventDefault();
+  const name=$('#name').value.trim().slice(0,30)||'Player';state=deal(name);save();render();
+});
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.cell');
+  if(c&&state){const i=+c.dataset.i;peek=state.card[i]===FREE?'FREE':state.card[i];
+    if(state.card[i]!==FREE){const before=prog().count;state.marks[i]=!state.marks[i];const after=prog().count;save();render();
+      if(after>before)toast('BINGO! Show your card to the host');}
+    else{$('#peek').textContent='FREE'}
+    return}
+  if(e.target.id==='clear'&&state){state.marks=state.card.map(c=>c===FREE);save();render()}
+  if(e.target.id==='fresh'&&state){
+    if(!confirmNew){confirmNew=true;render();setTimeout(()=>{confirmNew=false;render()},4000);return}
+    confirmNew=false;state=deal(state.name);peek='';save();render()}
+});
+
+$('#title').textContent=GAME_TITLE;document.title=GAME_TITLE;
+state=load();
+try{localStorage.setItem(KEY+'-test','1');localStorage.removeItem(KEY+'-test')}catch(e){$('#warn').hidden=false}
+render();
+}
+</script>
+</body>
+</html>
